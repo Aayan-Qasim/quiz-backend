@@ -29,6 +29,7 @@ exports.getWeeklyLeaderboard = async (req, res) => {
         email: u.email,
         level: u.level,
         streak: u.streak,
+        profileImageUri: u.profileImageUri,
         weeklyPoints,
         totalPoints: u.totalPoints
       };
@@ -56,6 +57,7 @@ exports.getAllTimeLeaderboard = async (req, res) => {
       email: u.email,
       level: u.level,
       streak: u.streak,
+      profileImageUri: u.profileImageUri,
       totalPoints: u.totalPoints
     }));
 
