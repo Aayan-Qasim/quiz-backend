@@ -12,7 +12,10 @@ connectDB();
 const app = express();
 
 // Initialize Middlewares
-app.use(cors());
+app.use(cors({
+  origin: ['https://quiz-frontend-jet.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // Root test endpoint
