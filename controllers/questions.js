@@ -1,4 +1,6 @@
 const Question = require('../models/Question');
+const User = require('../models/User');
+
 
 // @desc    Get questions with optional filters (category, isCustom)
 // @route   GET api/questions
@@ -217,3 +219,67 @@ exports.clearQuestions = async (req, res) => {
     res.status(500).json({ message: 'Server error clearing questions: ' + err.message });
   }
 };
+
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// @desc    Get questions for a test session ensuring no duplicates and avoiding already answered questions
+// @route   GET api/questions/test-session
+// @access  Private
+exports.getTestQuestionsSession = async (req, res) => {
+  try {
+    const { category, limit = 5 } = req.query;
+    const parsedLimit = parseInt(limit, 10) || 5;
+
+    const user = await User.findById(req.user.id);
+    const answeredIds = user ? (user.answeredQuestions || []) : [];
+
+    let query = {};
+    if (category && category !== 'All' && category !== 'Daily Quiz') {
+      query.category = { $regex: new RegExp('^' + category.trim() + '$', 'i') };
+    }
+
+    // Exclude already answered questions
+    query._id = { $nin: answeredIds };
+
+    let questions = await Question.find(query);
+
+    // If we have fewer questions than requested limit, fallback to fetch any category questions
+    if (questions.length < parsedLimit) {
+      let fallbackQuery = {};
+      if (category && category !== 'All' && category !== 'Daily Quiz') {
+        fallbackQuery.category = { $regex: new RegExp('^' + category.trim() + '$', 'i') };
+      }
+
+      const allCategoryQuestions = await Question.find(fallbackQuery);
+
+      // Shuffle the unique unanswered questions we did find
+      questions = shuffleArray(questions);
+
+      // Add unique questions from the fallback set to meet the limit
+      const selectedIds = new Set(questions.map(q => q._id.toString()));
+      const remainingQuestions = allCategoryQuestions.filter(q => !selectedIds.has(q._id.toString()));
+      const shuffledRemaining = shuffleArray(remainingQuestions);
+
+      for (const reqQ of shuffledRemaining) {
+        if (questions.length >= parsedLimit) break;
+        questions.push(reqQ);
+      }
+    } else {
+      // Just shuffle and limit the retrieved unanswered questions
+      questions = shuffleArray(questions).slice(0, parsedLimit);
+    }
+
+    res.json(questions);
+  } catch (err) {
+    console.error('getTestQuestionsSession Controller Error:', err.message);
+    res.status(500).json({ message: 'Server error retrieving test questions.' });
+  }
+};
+

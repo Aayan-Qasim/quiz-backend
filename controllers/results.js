@@ -59,7 +59,7 @@ exports.getUserResults = async (req, res) => {
 // @access  Private
 exports.submitQuizResult = async (req, res) => {
   try {
-    const { userId, category, score, totalQuestions, note } = req.body;
+    const { userId, category, score, totalQuestions, note, questionIds } = req.body;
 
     if (!userId || !category || score === undefined || !totalQuestions) {
       return res.status(400).json({ message: 'Please provide all required quiz result fields.' });
@@ -79,10 +79,18 @@ exports.submitQuizResult = async (req, res) => {
       category,
       score,
       totalQuestions,
-      note: (note || '').trim()
+      note: (note || '').trim(),
+      questionIds: questionIds || []
     });
 
     const savedResult = await newResult.save();
+
+    if (questionIds && Array.isArray(questionIds)) {
+      if (!user.answeredQuestions) {
+        user.answeredQuestions = [];
+      }
+      user.answeredQuestions.addToSet(...questionIds);
+    }
 
     const pointsEarned = score * 10;
     const currentPoints = user.totalPoints || 0;

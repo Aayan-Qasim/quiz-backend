@@ -8,11 +8,15 @@ const {
   deleteQuestion,
   toggleFavorite,
   bulkImportQuestions,
-  clearQuestions
+  clearQuestions,
+  getTestQuestionsSession
 } = require('../controllers/questions');
 
 // @route   GET api/questions
 router.get('/', auth, getQuestions);
+
+// @route   GET api/questions/test-session
+router.get('/test-session', auth, getTestQuestionsSession);
 
 // @route   POST api/questions
 router.post('/', adminAuth, createQuestion);

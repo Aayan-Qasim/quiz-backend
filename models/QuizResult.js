@@ -27,7 +27,11 @@ const quizResultSchema = new mongoose.Schema({
     type: String,
     default: '',
     trim: true
-  }
+  },
+  questionIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Question'
+  }]
 });
 
 // Transform _id to id when converting to JSON

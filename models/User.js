@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "Male"
   },
+  answeredQuestions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Question'
+  }],
   isAdmin: {
     type: Boolean,
     default: false
